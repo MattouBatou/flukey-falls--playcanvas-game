@@ -1,9 +1,9 @@
 {
-  "name": "playcanvas-typescript-template",
+  "name": "flukey-falls-playcanvas-game",
   "version": "1.0.0",
   "author": "Matthew Lewis",
   "homepage": "https://mattoubatou.com",
-  "description": "Another personalised Playcanvas Typescript template using playcanvas-sync.",
+  "description": "A drop7-like made with Playcanvas editor.",
   "keywords": [
     "typescript",
     "3D",
