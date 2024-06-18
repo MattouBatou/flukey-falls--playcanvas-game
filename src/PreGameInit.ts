@@ -4,6 +4,7 @@
 
     window.addEventListener('orientationchange', calculateDimensions, false);
     window.addEventListener('resize', calculateDimensions, false);
+    calculateDimensions();
 })();
 
 function calculateDimensions() {
@@ -13,12 +14,11 @@ function calculateDimensions() {
     if(!width || !height) return;
 
     if(width > height) {
-        _globalStore.landscape = true;
+        gameModel.landscape = true;
     }
     else {
-        _globalStore.landscape = false;
+        gameModel.landscape = false;
     }
-
-    console.log("orientation change!!!!")
+    
     pc.app?.fire(constants.ACTION_ORIENTATION_CHANGE);
 }

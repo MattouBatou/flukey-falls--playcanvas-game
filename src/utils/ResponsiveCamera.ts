@@ -7,13 +7,9 @@ class ResponsiveCamera extends pc.ScriptType {
     }
 
     checkAspectRatio() {
-        console.log("check aspect ratio");
         if(!this.entity.camera) return;
 
-        const width = this.app.graphicsDevice.width;
-        const height = this.app.graphicsDevice.height;
-
-        this.entity.camera.horizontalFov = height > width;
+        this.entity.camera.horizontalFov = !gameModel.landscape;
     }
 }
 
