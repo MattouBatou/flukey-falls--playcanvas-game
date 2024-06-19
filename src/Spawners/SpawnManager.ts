@@ -15,7 +15,7 @@ class SpawnManager extends pc.ScriptType {
     }
 
     private getRandomTileTemplateInstance(): pc.Entity {
-        const randIndex = Math.round(pc.math.random(0, this.tileTemplates.length-2));
+        const randIndex = Math.round(pc.math.random(0, this.tileTemplates.length-1));
         const templateAsset: pc.Asset = this.tileTemplates[randIndex];
         const tileInstance: pc.Entity = templateAsset.resource.instantiate();
         this.app.root.addChild(tileInstance);

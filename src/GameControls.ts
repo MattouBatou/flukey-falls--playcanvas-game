@@ -43,7 +43,7 @@ class GameControls extends pc.ScriptType {
         const clampX = pc.math.clamp(mousePos.x, gameModel.gameBoardPos.x - (gameModel.gameBoardScale.x/2), gameModel.gameBoardPos.x+(gameModel.gameBoardScale.x/2)-0.00000001);
         const snappedX = Math.round(clampX);
 
-        const topBoardSlotsRow = gameModel.boardSlots[0];
+        const topBoardSlotsRow = gameModel.boardSlotPositions[0];
 
         for(let boardColumnIndex = 0; boardColumnIndex < topBoardSlotsRow.length; boardColumnIndex++) {
             const column = topBoardSlotsRow[boardColumnIndex];
@@ -69,7 +69,7 @@ class GameControls extends pc.ScriptType {
     private onMouseDown(e: pc.MouseEvent): void {
         if(this.inputEnabled && e.button === pc.MOUSEBUTTON_LEFT) {
             this.app.fire(constants.MOVE_PLAYER_TILE_TO_GAME_BOARD_COLUMN, this.getWorldPointerPos(this.currentMousePos.x, this.currentMousePos.y));
-            this.app.fire(constants.PLACE_PLAYER_TILE, gameModel.boardSlots[gameModel.boardSlots.length-1][gameModel.currentBoardColumnIndex]);
+            this.app.fire(constants.PLACE_PLAYER_TILE, gameModel.boardSlotPositions[gameModel.boardSlotPositions.length-1][gameModel.currentBoardColumnIndex]);
         }
     }
 
@@ -80,20 +80,30 @@ class GameControls extends pc.ScriptType {
 
         if(this.inputEnabled) {
             this.app.fire(constants.MOVE_PLAYER_TILE_TO_GAME_BOARD_COLUMN, this.getWorldPointerPos(touchX, touchY));
-            this.app.fire(constants.PLACE_PLAYER_TILE, gameModel.boardSlots[gameModel.boardSlots.length-1][gameModel.currentBoardColumnIndex]);
+            this.app.fire(constants.PLACE_PLAYER_TILE);
         }
 
         e.event.preventDefault();
     }
 
-    private placePlayerTile(targetPos: pc.Vec3): void {
+    private placePlayerTile(): void {
         if(!gameModel.playerTile) return;
 
         this.inputEnabled = false;
 
+        this.app.fire(constants.BOARD_SET_PLAYER_TILE_TO_EMPTY_SLOT);
+        console.log(gameModel.currentEmptySlotPos);
+
+        if(!gameModel.currentColumnHasEmptySlot) {
+            // do some negative feedback animation to block player from placing block 
+            // in a space that would result in game over.
+            this.inputEnabled = true;
+            return;
+        }
+
         gameModel.playerTile
             .tween(gameModel.playerTile.getLocalPosition())
-            .to(targetPos.clone(), 0.33, customEasing.BounceOut)
+            .to(gameModel.currentEmptySlotPos, 0.33, customEasing.BounceOut)
             .start();
 
         gameModel.playerTile

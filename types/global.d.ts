@@ -11,11 +11,14 @@ declare global {
         highScore: number,
         currentBoardColumnIndex: number,
         landscape: boolean,
-        playerTile: pc.Entity | null,
-        boardSlots: pc.Vec3[][],
+        currentColumnHasEmptySlot: boolean,
+        currentEmptySlotPos: pc.Vec3,
         playerTileSpawnPos: pc.Vec3;
         gameBoardPos: pc.Vec3,
         gameBoardScale: pc.Vec3,
+        playerTile: pc.Entity | null,
+        boardSlotPositions: pc.Vec3[][],
+        boardSlots: Array<Array<pc.Entity | null>>,
         getBoardSlotPosition: (row: number, col: number) => pc.Vec3,
     }
     type CustomEasingFunctions = {
