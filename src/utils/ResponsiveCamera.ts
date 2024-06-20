@@ -10,6 +10,13 @@ class ResponsiveCamera extends pc.ScriptType {
         if(!this.entity.camera) return;
 
         this.entity.camera.horizontalFov = !gameModel.landscape;
+
+        if(!gameModel.landscape) {
+            this.entity.camera.fov = 30;
+        }
+        else {
+            this.entity.camera.fov = 45;
+        }
     }
 }
 

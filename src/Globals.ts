@@ -60,8 +60,9 @@ const constants = {
 
     // Game values
     SOLID_TILE_ID: 8,
-    END_OF_MATCH_SEQUENCE_DELAY_SHORT: 150,
-    END_OF_MATCH_SEQUENCE_DELAY_LONG: 750,
+    END_OF_MATCH_SEQUENCE_DELAY_SHORT: 250,
+    END_OF_MATCH_SEQUENCE_DELAY_LONG: 500,
+    GAME_SCORE_PER_MATCH: 7,
 
     // Animations
     //// Tiles
@@ -80,8 +81,8 @@ const constants = {
     INC_COMBO_FINAL_DELAY: 0.25,
     INC_COMBO_SCALE_AMOUNT_OVERSHOOT: 0.2,
     INC_COMBO_SCALE_AMOUNT_FINAL: 0.1,
-    DESTROY_TILE_POS_Z_DURATION: 0.25,
-    DESTROY_TILE_POS_Z_DELAY: 0.25,
+    DESTROY_TILE_POS_Z_DURATION: 0.15,
+    DESTROY_TILE_POS_Z_DELAY: 0.15,
     DESTROY_TILE_POS_Y_DURATION: 0.25,
     DROP_TILE_POS_DURATION: 0.33,
     DROP_TILE_POS_DELAY: 0.15,
@@ -92,7 +93,7 @@ const constants = {
 
 // Custom easing functions
 const tileBounceOut: EasingFunc = function (k: number) {
-    const bounciness = 18;
+    const bounciness = 19;
     return 1 - Math.abs(Math.cos(k * bounciness * (Math.PI/25))) * (1-k);
 };
 

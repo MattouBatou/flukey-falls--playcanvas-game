@@ -93,7 +93,7 @@ class GameControls extends pc.ScriptType {
             return;
         }
 
-        this.app.fire(constants.ANIM_TILE_DROP, gameModel.playerTile, gameModel.currentEmptySlotPos, 1,
+        this.app.fire(constants.ANIM_TILE_DROP, gameModel.playerTile, gameModel.currentEmptySlotPos, true, 1,
             () =>  {
                 // Start the checks for any matching tiles on the board
                 this.app.fire(constants.CHECK_FOR_MATCHES, true);

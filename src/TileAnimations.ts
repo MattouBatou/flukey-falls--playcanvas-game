@@ -24,11 +24,8 @@ class TileAnimations extends pc.ScriptType {
                         gameModel.destroyingAnimCount--;
 
                         if(gameModel.destroyingAnimCount === 0) {
-                            setTimeout(() => {
-                                onComplete();
-                                this.app.fire(constants.ANIM_DESTROYING_FINISHED);
-                            }, 250 * tileIndex);
-                            
+                            onComplete();
+                            this.app.fire(constants.ANIM_DESTROYING_FINISHED);
                         }
                     })
                     .start();
@@ -36,7 +33,7 @@ class TileAnimations extends pc.ScriptType {
             .start();
     }
 
-    dropTile(tile: pc.Entity, dropTo: pc.Vec3, tileIndex: number, onComplete: () => void) {
+    dropTile(tile: pc.Entity, dropTo: pc.Vec3, tileIndex: number, isPlayerTileDrop: boolean, onComplete: () => void) {
         const { DROP_TILE_POS_DURATION, DROP_TILE_POS_DELAY, DROP_TILE_SCALE_AMOUNT, DROP_TILE_SCALE_DURATION, DROP_TILE_SCALE_DELAY } = constants;
         
         gameModel.droppingAnimationsCount++;
@@ -54,11 +51,12 @@ class TileAnimations extends pc.ScriptType {
             .onComplete(() => {
                 gameModel.droppingAnimationsCount--;
     
-                if(gameModel.droppingAnimationsCount === 0) {
-                    setTimeout(() => {
-                        onComplete();
-                        this.app.fire(constants.ANIM_DROPS_FINISHED);
-                    }, 250 * tileIndex);
+                if(gameModel.droppingAnimationsCount === 0 && !isPlayerTileDrop) {
+                    onComplete();
+                    this.app.fire(constants.ANIM_DROPS_FINISHED);
+                }
+                else if(isPlayerTileDrop) {
+                    onComplete();
                 }
             })
             .start();
@@ -78,7 +76,7 @@ class TileAnimations extends pc.ScriptType {
         const comboTextPos = this.comboTextEntity.getLocalPosition();
         this.comboTextEntity.tween(comboTextPos)
                             .to(new pc.Vec3(comboTextPos.x, constants.COMBO_TEXT_Y_START, comboTextPos.z), 
-                                            HIDE_COMBO_DURATION, customEasing.BounceOut)
+                                            HIDE_COMBO_DURATION, pc.CircularOut)
                             .onComplete(() => {
                                 this.comboTextEntity.setLocalScale(1, 1, 1);
                             })

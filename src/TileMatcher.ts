@@ -1,9 +1,11 @@
 class TileMatcher extends pc.ScriptType {
     comboScoreEntity: pc.Entity;
+    scoreEntity: pc.Entity;
     static lastMatchesCount: number = 0;
 
     initialize(): void {
         this.app.on(constants.CHECK_FOR_MATCHES, this.checkForMatches, this);
+        this.updateScoreText();
     }
 
     checkForMatches(isFirstMatchCheck: boolean = false) {
@@ -22,42 +24,59 @@ class TileMatcher extends pc.ScriptType {
 
         if(!isFirstMatchCheck) {
             gameModel.comboCount++;
+            gameModel.currentGameScore += this.addComboToScore(matches.length);
+            this.updateScoreText();
 
+            this.app.fire(constants.ANIM_SHOW_COMBO);
+            
+            
             setTimeout(() => {
-                this.animateMatches(matches);
-                
                 if(this.comboScoreEntity.element) {
                     this.comboScoreEntity.element.text = gameModel.comboCount.toString();
                 }
+            }, constants.SHOW_COMBO_DURATION);
 
-                this.app.fire(constants.ANIM_SHOW_COMBO);
-                if(gameModel.comboCount > 2) {
-                    this.app.fire(constants.ANIM_INC_COMBO);
-                }
-            }, 1000);
+            if(gameModel.comboCount > 2) {
+                this.app.fire(constants.ANIM_INC_COMBO);
+            }
+
+            setTimeout(() => {
+                    this.animateMatches(matches);
+            }, constants.SHOW_COMBO_DURATION);
         }
         else {
+            gameModel.currentGameScore += this.addComboToScore(matches.length);
+            this.updateScoreText();
             this.animateMatches(matches);
         }
     }
 
     endOfMatching(wasFirstMatchCheck: boolean) {
-        setTimeout(() => {
-            if(gameModel.comboCount > 1) {
+        const currentComboCount = gameModel.comboCount;
+
+        if(gameModel.comboCount > 1) {
+           setTimeout(() => {
                 this.app.fire(constants.ANIM_HIDE_COMBO);
-            }
-            // matches finished fire event to spawn next tile.
-            gameModel.comboCount = 1;
-            if(this.comboScoreEntity.element) {
-                this.comboScoreEntity.element.text = '2';
-            }
-            // spawn a new player tile
-            setTimeout(() => {
-                this.app.fire(constants.ACTION_SPAWN_NEW_PLAYER_TILE);
-                gameModel.playerTile!.setPosition(gameModel.playerTileSpawnPos);
-                gameModel.inputEnabled = true;
-            }, constants.END_OF_MATCH_SEQUENCE_DELAY_SHORT);
-        }, constants.END_OF_MATCH_SEQUENCE_DELAY_SHORT * TileMatcher.lastMatchesCount);
+            
+                setTimeout(() => {
+                    gameModel.comboCount = 1;
+                    if(this.comboScoreEntity.element) {
+                        this.comboScoreEntity.element.text = '2';
+                    }
+                }, constants.HIDE_COMBO_DURATION * 2);
+            }, constants.END_OF_MATCH_SEQUENCE_DELAY_LONG);
+        }
+        
+        const spawnNewTileDelay = currentComboCount > 1 ? 
+                                  (constants.END_OF_MATCH_SEQUENCE_DELAY_LONG + (constants.HIDE_COMBO_DURATION * 2)) : 
+                                  constants.END_OF_MATCH_SEQUENCE_DELAY_SHORT;
+
+        // spawn a new player tile
+        setTimeout(() => {
+            this.app.fire(constants.ACTION_SPAWN_NEW_PLAYER_TILE);
+            gameModel.playerTile!.setPosition(gameModel.playerTileSpawnPos);
+            gameModel.inputEnabled = true;
+        }, spawnNewTileDelay);
     }
 
     animateMatches(matches: TileWithGridCoords[]) {
@@ -65,7 +84,9 @@ class TileMatcher extends pc.ScriptType {
             matches.forEach(match => this.moveRemainingColumnTiles(match.colIndex));
         }, this);
 
-        this.app.once(constants.ANIM_DROPS_FINISHED, () => this.app.fire(constants.CHECK_FOR_MATCHES), this);
+        this.app.once(constants.ANIM_DROPS_FINISHED, () =>  {
+            this.app.fire(constants.CHECK_FOR_MATCHES);
+        }, this);
 
         this.destroyMatchingTiles(matches);
     }
@@ -154,7 +175,10 @@ class TileMatcher extends pc.ScriptType {
             matches.forEach((match, matchIndex) => {
                 // NOTE(matt): Do explosion stuff here.
                 if(match.tile) {
-                    this.app.fire(constants.ANIM_TILE_DESTROY, match.tile, matchIndex+1, match.tile.destroy.bind(match.tile));
+                    this.app.fire(constants.ANIM_TILE_DESTROY, match.tile, matchIndex+1, () => {
+                        match.tile.destroy.bind(match.tile)
+                        match.tile.enabled = false;
+                    });
                     gameModel.boardSlots[match.rowIndex][match.colIndex] = null;
                 }
             });
@@ -185,7 +209,7 @@ class TileMatcher extends pc.ScriptType {
                 gameModel.boardSlots[nullRowIndex][targetColumnIndex] = slot;
                 gameModel.boardSlots[rowIndex][targetColumnIndex] = null;
 
-                this.app.fire(constants.ANIM_TILE_DROP, slot, gameModel.boardSlotPositions[nullRowIndex][targetColumnIndex], tilesMoved, ()=>{});
+                this.app.fire(constants.ANIM_TILE_DROP, slot, gameModel.boardSlotPositions[nullRowIndex][targetColumnIndex], tilesMoved, false, ()=>{});
 
                 // reset the rowIndex to start the process again.
                 nullRowIndex = -1;
@@ -204,7 +228,19 @@ class TileMatcher extends pc.ScriptType {
         const { tileNames } = gameModel;
         return tileNames.indexOf(tileName)+1;
     }
+
+    addComboToScore(matchesCount: number) {
+        // Combo multiplier calcuation taken from https://github.com/oddlord/html5-js-drop7/blob/master/js/drop7.es6
+        return matchesCount * Math.floor(constants.GAME_SCORE_PER_MATCH * (Math.pow(gameModel.comboCount, 2.5)));
+    }
+
+    updateScoreText() {
+        if(this.scoreEntity.element) {
+            this.scoreEntity.element.text = gameModel.currentGameScore.toLocaleString();
+        }
+    }
 }
 
 pc.registerScript(TileMatcher);
 TileMatcher.attributes.add('comboScoreEntity', { type: 'entity' });
+TileMatcher.attributes.add('scoreEntity', { type: 'entity' });
