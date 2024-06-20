@@ -9,7 +9,7 @@ const getBoardSlotPosition: GameModel['getBoardSlotPosition'] = (row, col) => {
 
 const gameModel: GameModel = {
     // Game scoring
-    comboCount: 0,
+    comboCount: 1,
     currentGameScore: 0,
     highScore: 0,
 
@@ -60,6 +60,8 @@ const constants = {
 
     // Game values
     SOLID_TILE_ID: 8,
+    END_OF_MATCH_SEQUENCE_DELAY_SHORT: 150,
+    END_OF_MATCH_SEQUENCE_DELAY_LONG: 750,
 
     // Animations
     //// Tiles
@@ -67,25 +69,33 @@ const constants = {
     ANIM_TILE_DESTROY: 'TileAnimations:Destroy',
     ANIM_DROPS_FINISHED: 'TileAnimations:AnimDropsFinished',
     ANIM_DESTROYING_FINISHED: 'TileAnimations:AnimDestroyingFinished',
+    ANIM_SHOW_COMBO: 'TileAnimations:ShowCombo',
+    ANIM_HIDE_COMBO: 'TileAnimations:HideCombo',
+    ANIM_INC_COMBO: 'TileAnimations:IncreasedCombo',
+    COMBO_TEXT_Y_END: -70,
+    COMBO_TEXT_Y_START: -200,
+    SHOW_COMBO_DURATION: 0.25,
+    HIDE_COMBO_DURATION: 0.25,
+    INC_COMBO_DURATION: 0.5,
+    INC_COMBO_FINAL_DELAY: 0.25,
+    INC_COMBO_SCALE_AMOUNT_OVERSHOOT: 0.2,
+    INC_COMBO_SCALE_AMOUNT_FINAL: 0.1,
+    DESTROY_TILE_POS_Z_DURATION: 0.25,
+    DESTROY_TILE_POS_Z_DELAY: 0.25,
+    DESTROY_TILE_POS_Y_DURATION: 0.25,
+    DROP_TILE_POS_DURATION: 0.33,
+    DROP_TILE_POS_DELAY: 0.15,
+    DROP_TILE_SCALE_AMOUNT: 0.75,
+    DROP_TILE_SCALE_DURATION: 0.15,
+    DROP_TILE_SCALE_DELAY: 0.15,
 }
 
 // Custom easing functions
 const tileBounceOut: EasingFunc = function (k: number) {
-    if (k < (1 / 2.75)) {
-        return 7.5625 * k * k;
-    } else if (k < (2 / 2.75)) {
-        return 7.5625 * (k -= (1.5 / 2.75)) * k + 0.75;
-    } else if (k < (2.5 / 2.75)) {
-        return 7.5625 * (k -= (2.25 / 2.75)) * k + 0.9375;
-    }
-    return 7.5625 * (k -= (2.625 / 2.75)) * k + 0.984375;
-};
-
-const tileBounceOut2: EasingFunc = function (k: number) {
-    const bounces = 20;
-    return 1 - Math.abs(Math.cos(k * bounces * (Math.PI/25))) * (1-k);
+    const bounciness = 18;
+    return 1 - Math.abs(Math.cos(k * bounciness * (Math.PI/25))) * (1-k);
 };
 
 const customEasing = {
-    BounceOut: tileBounceOut2
+    BounceOut: tileBounceOut
 };

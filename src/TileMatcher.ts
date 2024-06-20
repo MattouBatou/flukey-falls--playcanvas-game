@@ -1,4 +1,6 @@
 class TileMatcher extends pc.ScriptType {
+    comboScoreEntity: pc.Entity;
+    static lastMatchesCount: number = 0;
 
     initialize(): void {
         this.app.on(constants.CHECK_FOR_MATCHES, this.checkForMatches, this);
@@ -12,14 +14,26 @@ class TileMatcher extends pc.ScriptType {
         this.checkMatchesForDuplicates(matches);
 
         if(!matches.length)  {
-            this.endOfMatching();
+            this.endOfMatching(isFirstMatchCheck);
             return;
         }
 
+        TileMatcher.lastMatchesCount = matches.length;
+
         if(!isFirstMatchCheck) {
             gameModel.comboCount++;
+
             setTimeout(() => {
                 this.animateMatches(matches);
+                
+                if(this.comboScoreEntity.element) {
+                    this.comboScoreEntity.element.text = gameModel.comboCount.toString();
+                }
+
+                this.app.fire(constants.ANIM_SHOW_COMBO);
+                if(gameModel.comboCount > 2) {
+                    this.app.fire(constants.ANIM_INC_COMBO);
+                }
             }, 1000);
         }
         else {
@@ -27,13 +41,23 @@ class TileMatcher extends pc.ScriptType {
         }
     }
 
-    endOfMatching() {
-        // matches finished fire event to spawn next tile.
-        gameModel.comboCount = 0;
-        // spawn a new player tile
-        this.app.fire(constants.ACTION_SPAWN_NEW_PLAYER_TILE);
-        gameModel.playerTile!.setPosition(gameModel.playerTileSpawnPos);
-        gameModel.inputEnabled = true;
+    endOfMatching(wasFirstMatchCheck: boolean) {
+        setTimeout(() => {
+            if(gameModel.comboCount > 1) {
+                this.app.fire(constants.ANIM_HIDE_COMBO);
+            }
+            // matches finished fire event to spawn next tile.
+            gameModel.comboCount = 1;
+            if(this.comboScoreEntity.element) {
+                this.comboScoreEntity.element.text = '2';
+            }
+            // spawn a new player tile
+            setTimeout(() => {
+                this.app.fire(constants.ACTION_SPAWN_NEW_PLAYER_TILE);
+                gameModel.playerTile!.setPosition(gameModel.playerTileSpawnPos);
+                gameModel.inputEnabled = true;
+            }, constants.END_OF_MATCH_SEQUENCE_DELAY_SHORT);
+        }, constants.END_OF_MATCH_SEQUENCE_DELAY_SHORT * TileMatcher.lastMatchesCount);
     }
 
     animateMatches(matches: TileWithGridCoords[]) {
@@ -127,10 +151,10 @@ class TileMatcher extends pc.ScriptType {
 
     destroyMatchingTiles(matches: TileWithGridCoords[]) {
         if(matches.length) {
-            matches.forEach((match) => {
+            matches.forEach((match, matchIndex) => {
                 // NOTE(matt): Do explosion stuff here.
                 if(match.tile) {
-                    this.app.fire(constants.ANIM_TILE_DESTROY, match.tile, match.tile.destroy.bind(match.tile));
+                    this.app.fire(constants.ANIM_TILE_DESTROY, match.tile, matchIndex+1, match.tile.destroy.bind(match.tile));
                     gameModel.boardSlots[match.rowIndex][match.colIndex] = null;
                 }
             });
@@ -161,7 +185,7 @@ class TileMatcher extends pc.ScriptType {
                 gameModel.boardSlots[nullRowIndex][targetColumnIndex] = slot;
                 gameModel.boardSlots[rowIndex][targetColumnIndex] = null;
 
-                this.app.fire(constants.ANIM_TILE_DROP, slot, gameModel.boardSlotPositions[nullRowIndex][targetColumnIndex], ()=>{});
+                this.app.fire(constants.ANIM_TILE_DROP, slot, gameModel.boardSlotPositions[nullRowIndex][targetColumnIndex], tilesMoved, ()=>{});
 
                 // reset the rowIndex to start the process again.
                 nullRowIndex = -1;
@@ -183,3 +207,4 @@ class TileMatcher extends pc.ScriptType {
 }
 
 pc.registerScript(TileMatcher);
+TileMatcher.attributes.add('comboScoreEntity', { type: 'entity' });

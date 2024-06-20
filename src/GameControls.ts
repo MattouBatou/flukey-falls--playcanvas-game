@@ -6,9 +6,6 @@ class GameControls extends pc.ScriptType {
     currentMousePos: pc.Vec2;
 
     initialize(): void {
-        this.mainCamera = (this.app.root.findByName('Camera') as pc.Entity);
-
-        
         if(!this.mainCamera || !this.mainCamera.camera) {
             console.error(`A main camera called "Camera" is needed for GameControls to function.`);
         }
@@ -96,7 +93,7 @@ class GameControls extends pc.ScriptType {
             return;
         }
 
-        this.app.fire(constants.ANIM_TILE_DROP, gameModel.playerTile, gameModel.currentEmptySlotPos,
+        this.app.fire(constants.ANIM_TILE_DROP, gameModel.playerTile, gameModel.currentEmptySlotPos, 1,
             () =>  {
                 // Start the checks for any matching tiles on the board
                 this.app.fire(constants.CHECK_FOR_MATCHES, true);
@@ -122,3 +119,4 @@ class GameControls extends pc.ScriptType {
 
 pc.registerScript(GameControls);
 GameControls.attributes.add('targetPlane', { type: 'entity' });
+GameControls.attributes.add('mainCamera', { type: 'entity' });
