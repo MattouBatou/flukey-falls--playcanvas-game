@@ -4,7 +4,6 @@ class GameControls extends pc.ScriptType {
     targetPlane: pc.Entity;
     lastWorldPointerPos: pc.Vec3;
     currentMousePos: pc.Vec2;
-    inputEnabled: boolean = true;
 
     initialize(): void {
         this.mainCamera = (this.app.root.findByName('Camera') as pc.Entity);
@@ -37,39 +36,19 @@ class GameControls extends pc.ScriptType {
         this.app.on(constants.PLACE_PLAYER_TILE, this.placePlayerTile, this);
     }
 
-    private movePlayerTileToGameboardColumn(mousePos: pc.Vec3): void {
-        if(!gameModel.playerTile) return;
-
-        const clampX = pc.math.clamp(mousePos.x, gameModel.gameBoardPos.x - (gameModel.gameBoardScale.x/2), gameModel.gameBoardPos.x+(gameModel.gameBoardScale.x/2)-0.00000001);
-        const snappedX = Math.round(clampX);
-
-        const topBoardSlotsRow = gameModel.boardSlotPositions[0];
-
-        for(let boardColumnIndex = 0; boardColumnIndex < topBoardSlotsRow.length; boardColumnIndex++) {
-            const column = topBoardSlotsRow[boardColumnIndex];
-            if(column.x === snappedX) {
-                gameModel.currentBoardColumnIndex = boardColumnIndex;
-                break;
-            }
-        }
-
-        gameModel.playerTile.setPosition(snappedX, gameModel.playerTileSpawnPos.y, gameModel.playerTileSpawnPos.z);
-    }
-
     private onMouseMove(e: pc.MouseEvent): void {
         this.currentMousePos.set(e.x, e.y);
 
-        if(this.inputEnabled) {
-            this.app.fire(constants.MOVE_PLAYER_TILE_TO_GAME_BOARD_COLUMN, this.getWorldPointerPos(this.currentMousePos.x, this.currentMousePos.y));
+        if(gameModel.inputEnabled) {
+            this.app.fire(constants.MOVE_PLAYER_TILE_TO_GAME_BOARD_COLUMN, this.getWorldPointerPos(this.currentMousePos.x, this.currentMousePos.y), false);
         }
 
         e.event.preventDefault();
     }
 
     private onMouseDown(e: pc.MouseEvent): void {
-        if(this.inputEnabled && e.button === pc.MOUSEBUTTON_LEFT) {
-            this.app.fire(constants.MOVE_PLAYER_TILE_TO_GAME_BOARD_COLUMN, this.getWorldPointerPos(this.currentMousePos.x, this.currentMousePos.y));
-            this.app.fire(constants.PLACE_PLAYER_TILE, gameModel.boardSlotPositions[gameModel.boardSlotPositions.length-1][gameModel.currentBoardColumnIndex]);
+        if(gameModel.inputEnabled && e.button === pc.MOUSEBUTTON_LEFT) {
+            this.app.fire(constants.MOVE_PLAYER_TILE_TO_GAME_BOARD_COLUMN, this.getWorldPointerPos(this.currentMousePos.x, this.currentMousePos.y), true);
         }
     }
 
@@ -78,46 +57,51 @@ class GameControls extends pc.ScriptType {
         const touchX = touch.clientX;
         const touchY = touch.clientY;
 
-        if(this.inputEnabled) {
-            this.app.fire(constants.MOVE_PLAYER_TILE_TO_GAME_BOARD_COLUMN, this.getWorldPointerPos(touchX, touchY));
-            this.app.fire(constants.PLACE_PLAYER_TILE);
+        if(gameModel.inputEnabled) {
+            this.app.fire(constants.MOVE_PLAYER_TILE_TO_GAME_BOARD_COLUMN, this.getWorldPointerPos(touchX, touchY), true);
+            
         }
 
         e.event.preventDefault();
     }
 
-    private placePlayerTile(): void {
+    private movePlayerTileToGameboardColumn(mousePos: pc.Vec3, placeTile: boolean): void {
         if(!gameModel.playerTile) return;
 
-        this.inputEnabled = false;
+        const clampX = pc.math.clamp(mousePos.x, gameModel.gameBoardPos.x - (gameModel.gameBoardScale.x/2), gameModel.gameBoardPos.x+(gameModel.gameBoardScale.x/2)-0.00000001);
+        const snappedX = Math.round(clampX);
+        gameModel.playerTile.setPosition(snappedX, gameModel.playerTileSpawnPos.y, gameModel.playerTileSpawnPos.z);
 
-        this.app.fire(constants.BOARD_SET_PLAYER_TILE_TO_EMPTY_SLOT);
-        console.log(gameModel.currentEmptySlotPos);
+        const topBoardSlotsRow = gameModel.boardSlotPositions[0];
+        for(let boardColumnIndex = 0; boardColumnIndex < topBoardSlotsRow.length; boardColumnIndex++) {
+            const column = topBoardSlotsRow[boardColumnIndex];
+            if(placeTile && column.x === snappedX) {
+                this.app.fire(constants.PLACE_PLAYER_TILE, boardColumnIndex);
+                break;
+            }
+        }
+    }
+
+    private placePlayerTile(boardColumnIndex: number): void {
+        if(!gameModel.playerTile) return;
+
+        gameModel.inputEnabled = false;
+
+        this.app.fire(constants.BOARD_SET_PLAYER_TILE_TO_EMPTY_SLOT, boardColumnIndex);
 
         if(!gameModel.currentColumnHasEmptySlot) {
             // do some negative feedback animation to block player from placing block 
             // in a space that would result in game over.
-            this.inputEnabled = true;
+            gameModel.inputEnabled = true;
             return;
         }
 
-        gameModel.playerTile
-            .tween(gameModel.playerTile.getLocalPosition())
-            .to(gameModel.currentEmptySlotPos, 0.33, customEasing.BounceOut)
-            .start();
-
-        gameModel.playerTile
-            .tween(gameModel.playerTile.getLocalScale())
-            .to(new pc.Vec3(1, 1, 0.6), 0.1, customEasing.BounceOut)
-            .delay(0.25)
-            .repeat(2)
-            .yoyo(true)
-            .onComplete(() =>  {
-                this.app.fire(constants.ACTION_SPAWN_NEW_PLAYER_TILE);
-                gameModel.playerTile!.setPosition(gameModel.playerTileSpawnPos);
-                this.inputEnabled = true;
-            })
-            .start();
+        this.app.fire(constants.ANIM_TILE_DROP, gameModel.playerTile, gameModel.currentEmptySlotPos,
+            () =>  {
+                // Start the checks for any matching tiles on the board
+                this.app.fire(constants.CHECK_FOR_MATCHES, true);
+            }
+        );
     }
 
     private getWorldPointerPos(x: number, y: number): pc.Vec3 {

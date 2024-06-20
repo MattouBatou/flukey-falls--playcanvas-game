@@ -8,23 +8,42 @@ const getBoardSlotPosition: GameModel['getBoardSlotPosition'] = (row, col) => {
 }
 
 const gameModel: GameModel = {
+    // Game scoring
     comboCount: 0,
     currentGameScore: 0,
     highScore: 0,
-    currentBoardColumnIndex: 0,
+
+    // Device
+    landscape: true,
+    
+    // Board state
     currentColumnHasEmptySlot: true,
-    landscape: true, 
     currentEmptySlotPos: new pc.Vec3(),
-    playerTileSpawnPos: new pc.Vec3(),
-    gameBoardPos: new pc.Vec3(),
-    gameBoardScale: new pc.Vec3(),
-    playerTile: null,
     boardSlotPositions: [],
     boardSlots: [],
+
+    // Layout / view
+    gameBoardPos: new pc.Vec3(),
+    gameBoardScale: new pc.Vec3(),
+
+    // Player tile
+    playerTile: null,
+    playerTileSpawnPos: new pc.Vec3(),
+    tileNames: ['Tile_1', 'Tile_2', 'Tile_3', 'Tile_4', 'Tile_5', 'Tile_6', 'Tile_7', 'Tile_Solid'], 
+
+    // Input
+    inputEnabled: true,
+
+    // Animations
+    destroyingAnimCount: 0,
+    droppingAnimationsCount: 0,
+
+    // Global functions
     getBoardSlotPosition,
 };
 
 const constants = {
+    // Device Actions
     ACTION_ORIENTATION_CHANGE: 'orientationChange',
     // Game State Actions
     ACTION_SPAWN_NEW_PLAYER_TILE: 'SpawnNewPlayerTile',
@@ -32,9 +51,22 @@ const constants = {
 
     // Mouse Events
     MOUSE_LEFT_CLICK: 'MouseLeftClick',
-    // Game Events
+    // Game Input Actions
     MOVE_PLAYER_TILE_TO_GAME_BOARD_COLUMN: 'GameInput:MoveTileToBoardColumn',
-    PLACE_PLAYER_TILE: 'GameInput:PlacePlayerTile'
+    PLACE_PLAYER_TILE: 'GameInput:PlacePlayerTile',
+
+    // Checking Matches Actions
+    CHECK_FOR_MATCHES: 'TileMatcher:CheckForMatches',
+
+    // Game values
+    SOLID_TILE_ID: 8,
+
+    // Animations
+    //// Tiles
+    ANIM_TILE_DROP: 'TileAnimations:Drop',
+    ANIM_TILE_DESTROY: 'TileAnimations:Destroy',
+    ANIM_DROPS_FINISHED: 'TileAnimations:AnimDropsFinished',
+    ANIM_DESTROYING_FINISHED: 'TileAnimations:AnimDestroyingFinished',
 }
 
 // Custom easing functions

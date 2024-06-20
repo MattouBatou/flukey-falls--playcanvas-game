@@ -42,12 +42,12 @@ class BoardManager extends pc.ScriptType {
 
     // finds the first empty slot at the given column index and 
     // sets the passed in Vec3 to the position in world coords of that slot.
-    setPlayerTileToEmptySlot() {
+    setPlayerTileToEmptySlot(columnIndex: number) {
         // check boardSlots for first free element in column
         for(let row = gameModel.boardSlots.length-1; row >= 0; row--) {
-            if(gameModel.boardSlots[row][gameModel.currentBoardColumnIndex] === null) {
-                gameModel.boardSlots[row][gameModel.currentBoardColumnIndex] = gameModel.playerTile;
-                gameModel.currentEmptySlotPos.copy(gameModel.boardSlotPositions[row][gameModel.currentBoardColumnIndex]);
+            if(gameModel.boardSlots[row][columnIndex] === null) {
+                gameModel.boardSlots[row][columnIndex] = gameModel.playerTile;
+                gameModel.currentEmptySlotPos.copy(gameModel.boardSlotPositions[row][columnIndex]);
                 gameModel.currentColumnHasEmptySlot = true;
                 return;
             }
