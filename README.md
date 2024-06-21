@@ -11,6 +11,7 @@ Drop7 games used for reference:
 
 Drop7 articles used for game design reference:
 * https://dl.acm.org/doi/pdf/10.5555/1980722.1980725
+* https://blog.adamatomic.com/post/46685122887/drop7-strats
 
 Playcanvas project page: https://playcanvas.com/project/1228443/overview/flukey-falls
 Playcanvas published build: https://playcanv.as/p/3Up6UGYj/
